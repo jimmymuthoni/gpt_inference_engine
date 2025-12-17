@@ -2,16 +2,14 @@
 
 #include "tensor.h"
 
-struct LayerNormQuant
-{
+struct LayerNormQuant{
     Tensor_Quant<1> bias;
     Tensor_Quant<1> weight;
 
     void apply(Tensor_Quant<1> &out, const Tensor_Quant<1> &in);
 };
 
-struct MLPBlockQuant
-{
+struct MLPBlockQuant{
     Tensor_Quant<1> c_fc_bias;
     Tensor_Quant<2> c_fc_weight;
     Tensor_Quant<1> c_proj_bias;
@@ -20,8 +18,7 @@ struct MLPBlockQuant
     void apply(const Tensor_Quant<1> &out, const Tensor_Quant<1> &in);
 };
 
-struct CausalSelfAttentionQuant
-{
+struct CausalSelfAttentionQuant{
     int num_heads;
     Tensor_Quant<1> c_attn_bias;
     Tensor_Quant<2> c_attn_weight;
@@ -32,8 +29,7 @@ struct CausalSelfAttentionQuant
                int pos, const Tensor_Quant<2> &kvbuf);
 };
 
-struct TransformerBlockQuant
-{
+struct TransformerBlockQuant{
     CausalSelfAttentionQuant attn;
     LayerNormQuant ln_1, ln_2;
     MLPBlockQuant mlp;
@@ -42,8 +38,7 @@ struct TransformerBlockQuant
     void apply(const Tensor_Quant<1> &x, int i, const Tensor_Quant<2> &kvbuf);
 };
 
-struct ModelQuant
-{
+struct ModelQuant{
     int embedding_dim;
     int num_tokens;
     int context_len;
@@ -58,8 +53,7 @@ struct ModelQuant
 
     TransformerBlockQuant *h;
 
-    ModelQuant()
-    {
+    ModelQuant(){
         h = NULL;
         mmap_data = NULL;
     }
