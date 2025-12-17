@@ -11,12 +11,10 @@
 #include "model.h"
 #include "tensor.h"
 
-bool load_gpt2_model(Model &m)
-{
+bool load_gpt2_model(Model &m){
     const char *fname = "model/model.bin";
     int fd = open(fname, O_RDONLY);
-    if (fd < 0)
-    {
+    if (fd < 0){
         perror(fname);
         return false;
     }
