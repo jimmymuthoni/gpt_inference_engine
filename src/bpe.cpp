@@ -4,17 +4,15 @@
 
 #include "bpe.h"
 
-bool BPEDecoder::load(const std::string &vocab_path)
-{
+bool BPEDecoder::load(const std::string &vocab_path){
     std::ifstream file(vocab_path, std::ios::binary);
     if (!file)
         return false;
 
     vocab.clear();
 
-    while (true)
-    {
-        unsigned char len;
+    while (true){
+    unsigned char len;
         if (!file.read((char *)&len, 1))
             break;
 
@@ -28,12 +26,10 @@ bool BPEDecoder::load(const std::string &vocab_path)
     return true;
 }
 
-std::string BPEDecoder::decode(const std::vector<int> &tokens)
-{
+std::string BPEDecoder::decode(const std::vector<int> &tokens){
     std::string output;
 
-    for (int tok : tokens)
-    {
+    for (int tok : tokens){
         if (tok == -1)
         {
             output += "(?)"; // possible unknown token
@@ -51,8 +47,7 @@ std::string BPEDecoder::decode(const std::vector<int> &tokens)
 
 // TO-DO encoder check for merges or trie based
 
-bool BPEEncoder::load(const std::vector<std::string> &vocab)
-{
+bool BPEEncoder::load(const std::vector<std::string> &vocab){
     for (int i = 0; i < vocab.size(); i++)
     {
         toi[vocab[i]] = i;
@@ -62,23 +57,19 @@ bool BPEEncoder::load(const std::vector<std::string> &vocab)
     return true;
 }
 
-const char *BPEEncoder::encode(const char *text, int *tokens, int max_tokens, int *num_tokens)
-{
+const char *BPEEncoder::encode(const char *text, int *tokens, int max_tokens, int *num_tokens){
     *num_tokens = 0;
 
-    while (*text && *num_tokens < max_tokens)
-    {
+    while (*text && *num_tokens < max_tokens){
         size_t try_len = std::min(longest_vocab, strlen(text));
         bool found = false;
 
         // search from longest possible down to 1 character
-        for (size_t len = try_len; len > 0; len--)
-        {
+        for (size_t len = try_len; len > 0; len--){
             std::string candidate(text, len);
 
             auto it = toi.find(candidate);
-            if (it != toi.end())
-            {
+            if (it != toi.end()){
                 tokens[(*num_tokens)++] = it->second;
 
                 text += len; // advance the pointer by len of the match
