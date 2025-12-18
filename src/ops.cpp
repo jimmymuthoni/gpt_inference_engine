@@ -5,8 +5,7 @@
 
 float sdot(const float *a, const float *b, int n){
     float sum = 0.0f;
-    for (int i = 0; i < n; ++i)
-    {
+    for (int i = 0; i < n; ++i){
         sum += a[i] * b[i];
     }
     return sum;
@@ -14,8 +13,7 @@ float sdot(const float *a, const float *b, int n){
 
 float sdot(const int8_t *a, const int8_t *b, int n){
     float sum = 0.0f;
-    for (int i = 0; i < n; ++i)
-    {
+    for (int i = 0; i < n; ++i){
         sum += a[i] * b[i];
     }
     return sum;
@@ -91,31 +89,26 @@ int temperature_sampling(const Tensor<1> &logits, float temperature){
     float max_score = -INFINITY; // keep track of this for softmax
     for (int i = 0; i < n; i++){
         scores[i] = logits[i] / temperature;
-        if (scores[i] > max_score)
-        {
+        if (scores[i] > max_score) {
             max_score = scores[i];
         }
     }
 
     float sum_exp = 0.0f;
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++){
         scores[i] = expf(scores[i] - max_score);
         sum_exp += scores[i];
     }
 
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++){
         scores[i] /= sum_exp;
     }
 
     float r = (float)rand() / RAND_MAX;
     float cdf = 0.0f;
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++){
         cdf += scores[i];
-        if (r <= cdf)
-        {
+        if (r <= cdf) {
             delete[] scores;
             return i;
         }
@@ -127,41 +120,34 @@ int temperature_sampling(const Tensor<1> &logits, float temperature){
 
 /////// for quant operations
 
-int temperature_sampling(const Tensor_Quant<1> &logits, float temperature)
-{
+int temperature_sampling(const Tensor_Quant<1> &logits, float temperature){
     int n = logits.shape[0];
 
     float *scores = new float[n];
 
     float max_score = -INFINITY;
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++){
         scores[i] = logits.get_dequantized(i) / temperature;
-        if (scores[i] > max_score)
-        {
+        if (scores[i] > max_score){
             max_score = scores[i];
         }
     }
 
     float sum_exp = 0.0f;
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         scores[i] = expf(scores[i] - max_score);
         sum_exp += scores[i];
     }
 
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++){
         scores[i] /= sum_exp;
     }
 
     float r = (float)rand() / RAND_MAX;
     float cdf = 0.0f;
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++){
         cdf += scores[i];
-        if (r <= cdf)
-        {
+        if (r <= cdf){
             delete[] scores;
             return i;
         }
@@ -171,8 +157,7 @@ int temperature_sampling(const Tensor_Quant<1> &logits, float temperature)
     return n - 1;
 }
 
-float sdot_simd(const int8_t *a, const int8_t *b, int n)
-{
+float sdot_simd(const int8_t *a, const int8_t *b, int n){
     const int simd_size = 16; // 128 bit / 8 bit = 16 int8_t values
     int simd_end = (n / simd_size) * simd_size;
 
@@ -181,8 +166,7 @@ float sdot_simd(const int8_t *a, const int8_t *b, int n)
     int32x4_t sum_vec2 = vdupq_n_s32(0);
     int32x4_t sum_vec3 = vdupq_n_s32(0);
 
-    for (int i = 0; i < simd_end; i += simd_size)
-    {
+    for (int i = 0; i < simd_end; i += simd_size){
         int8x16_t va = vld1q_s8(a + i);
         int8x16_t vb = vld1q_s8(b + i);
 
@@ -195,26 +179,22 @@ float sdot_simd(const int8_t *a, const int8_t *b, int n)
 
     int32_t sum = vaddvq_s32(sum_vec0) + vaddvq_s32(sum_vec1);
 
-    for (int i = simd_end; i < n; ++i)
-    {
+    for (int i = simd_end; i < n; ++i){
         sum += a[i] * b[i];
     }
 
     return static_cast<float>(sum);
 }
 
-int sample_greedy(const Tensor_Quant<1> &logits, float temperature)
-{
+int sample_greedy(const Tensor_Quant<1> &logits, float temperature){
     int n = logits.shape[0];
 
     int best_idx = 0;
     float best_score = logits.get_dequantized(0) / temperature;
 
-    for (int i = 1; i < n; i++)
-    {
+    for (int i = 1; i < n; i++){
         float score = logits.get_dequantized(i) / temperature;
-        if (score > best_score)
-        {
+        if (score > best_score){
             best_score = score;
             best_idx = i;
         }
