@@ -48,8 +48,7 @@ std::string BPEDecoder::decode(const std::vector<int> &tokens){
 // TO-DO encoder check for merges or trie based
 
 bool BPEEncoder::load(const std::vector<std::string> &vocab){
-    for (int i = 0; i < vocab.size(); i++)
-    {
+    for (int i = 0; i < vocab.size(); i++){
         toi[vocab[i]] = i;
 
         longest_vocab = std::max(longest_vocab, vocab[i].size());
