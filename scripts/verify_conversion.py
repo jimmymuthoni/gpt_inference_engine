@@ -1,6 +1,7 @@
 import json
 import numpy as np
 
+
 with open("model/model_index.json", 'r') as f:
     metadata = json.load(f)
 
