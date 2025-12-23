@@ -11,12 +11,10 @@
 #include "model_quant.h"
 #include "tensor.h"
 
-bool load_gpt2_model_quantized(ModelQuant &m)
-{
+bool load_gpt2_model_quantized(ModelQuant &m){
     const char *fname = "model/model_absmax.bin";
     int fd = open(fname, O_RDONLY);
-    if (fd < 0)
-    {
+    if (fd < 0) {
         perror(fname);
         return false;
     }
