@@ -22,7 +22,6 @@ class WeightMapper:
         self.header_offset = 0
         self.bin_offset = 0
         
-        # Track layer information for later loading
         self.layer_index = {}
 
         self._download_model()
