@@ -79,8 +79,8 @@ class ABSMaxQuantization:
         offs = self.metadata[layer_name]['data_offsets']
         shape = self.metadata[layer_name]['shape']
 
-        off = self.header_offset + offs[0] # basically the header + starting position
-        size = offs[1] - offs[0] # ending - starting
+        off = self.header_offset + offs[0]
+        size = offs[1] - offs[0]
 
         w = np.frombuffer(self.m[off: off + size], dtype=np.float32)
         w, scale = self._perform_absmax(w)
@@ -106,22 +106,21 @@ class ABSMaxQuantization:
         self.bin_file.write(buff)
 
         buff_size = len(buff)
-        padded_size = (buff_size + 31) & (~31) # pad weights to align with 32 bytes
+        padded_size = (buff_size + 31) & (~31)
         if padded_size > buff_size:
             print(f"adding padding to {layer_name}")
-            self.bin_file.write(bytearray(padded_size - buff_size)) # write the null bytes as padding at the end
+            self.bin_file.write(bytearray(padded_size - buff_size))
         
         return padded_size
 
     def do_mmap(self):
         with open(self.model_path, 'r') as f:
             with mmap.mmap(f.fileno(), length=0, access=mmap.ACCESS_READ) as self.m:
-                # check here for format - https://github.com/huggingface/safetensors
                 header = self.m.read(8)
                 n = int.from_bytes(header, byteorder="little")
-                metadata_bytes = self.m.read(n) # advance to metadata
+                metadata_bytes = self.m.read(n)
                 self.metadata = json.loads(metadata_bytes)
-                self.header_offset = n + 8 # distance away from header
+                self.header_offset = n + 8
 
                 self.bin_offset += self._calculate_offsets("wte.weight")
                 self.bin_offset += self._calculate_offsets("wpe.weight")
