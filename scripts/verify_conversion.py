@@ -7,6 +7,7 @@ with open("model/model_index.json", 'r') as f:
 
 all_weights = {}
 
+#loading model and verfying weight conversion
 with open("model/model.bin", 'rb') as f:
     for layer_name, layer_info in metadata.items():
         f.seek(layer_info['offset'])
