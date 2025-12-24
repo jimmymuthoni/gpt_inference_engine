@@ -5,6 +5,7 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 
 class ABSMaxQuantization:
+    """This class does absmax quantization"""
     def __init__(self, model_name: str, output_name: str = "model.bin"):
         self.model_name = model_name
         self.model_path = None
@@ -16,8 +17,7 @@ class ABSMaxQuantization:
 
         self.header_offset = 0
         self.bin_offset = 0
-        
-        # Track layer information for later loading
+    
         self.layer_index = {}
 
         self._download_model()
@@ -44,10 +44,10 @@ class ABSMaxQuantization:
         self.bin_file.write(buff)
 
         buff_size = len(buff)
-        padded_size = (buff_size + 31) & (~31) # to align with our current code? better for simd?
+        padded_size = (buff_size + 31) & (~31) 
         if padded_size > buff_size:
             print(f"adding padding to {layer_name}")
-            self.bin_file.write(bytearray(padded_size - buff_size)) # write the null bytes as padding at the end
+            self.bin_file.write(bytearray(padded_size - buff_size)) 
         
         return padded_size
     
