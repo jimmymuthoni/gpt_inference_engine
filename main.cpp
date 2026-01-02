@@ -9,8 +9,7 @@
 const int ctx_max = 1024;
 extern bool load_gpt2_model(Model &m);
 
-int generate_greedy(const char *prompt, int ntokens, Model &m, BPEEncoder &encoder, BPEDecoder &decoder, float temperature)
-{
+int generate_greedy(const char *prompt, int ntokens, Model &m, BPEEncoder &encoder, BPEDecoder &decoder, float temperature){
     int ctx_tokens[ctx_max + 1];
 
     int N;
@@ -20,8 +19,7 @@ int generate_greedy(const char *prompt, int ntokens, Model &m, BPEEncoder &encod
     Tensor<1> ybuf(m.embedding_dim);
     Tensor<1> logitbuf(m.ntokens);
 
-    for (int j = 0; j < ntokens; j++)
-    {
+    for (int j = 0; j < ntokens; j++) {
         m.apply_transformer(ctx_tokens[j], j, kvbuf, ybuf);
 
         if (j < N - 1)
@@ -39,8 +37,7 @@ int generate_greedy(const char *prompt, int ntokens, Model &m, BPEEncoder &encod
     return ntokens;
 };
 
-int generate_temperature_scaling(const char *prompt, int ntokens, Model &m, BPEEncoder &encoder, BPEDecoder &decoder, float temperature)
-{
+int generate_temperature_scaling(const char *prompt, int ntokens, Model &m, BPEEncoder &encoder, BPEDecoder &decoder, float temperature){
     int ctx_tokens[ctx_max + 1];
 
     int N;
@@ -70,8 +67,7 @@ int generate_temperature_scaling(const char *prompt, int ntokens, Model &m, BPEE
 }
 
 // applies to the prompt given
-float calculate_ppl(const char *prompt, int ntokens, Model &m, BPEEncoder &encoder, BPEDecoder &decoder, float temperature)
-{
+float calculate_ppl(const char *prompt, int ntokens, Model &m, BPEEncoder &encoder, BPEDecoder &decoder, float temperature){
     int ctx_tokens[ctx_max + 1];
     int N;
     float nll = 0.0;
@@ -82,8 +78,7 @@ float calculate_ppl(const char *prompt, int ntokens, Model &m, BPEEncoder &encod
     Tensor<1> ybuf(m.embedding_dim);
     Tensor<1> logitbuf(m.ntokens);
 
-    for (int j = 0; j < N - 1; j++)
-    {
+    for (int j = 0; j < N - 1; j++){
         m.apply_transformer(ctx_tokens[j], j, kvbuf, ybuf);
         m.apply_lm_head(ybuf, logitbuf);
 
@@ -93,14 +88,12 @@ float calculate_ppl(const char *prompt, int ntokens, Model &m, BPEEncoder &encod
         }
 
         float max_logit = -INFINITY;
-        for (int i = 0; i < m.ntokens; i++)
-        {
+        for (int i = 0; i < m.ntokens; i++){
             max_logit = std::max(max_logit, logitbuf[i]);
         }
 
         float sum_exp = 0.0;
-        for (int i = 0; i < m.ntokens; i++)
-        {
+        for (int i = 0; i < m.ntokens; i++){
             sum_exp += std::exp(logitbuf[i] - max_logit);
         }
 
@@ -114,12 +107,10 @@ float calculate_ppl(const char *prompt, int ntokens, Model &m, BPEEncoder &encod
     return std::exp(nll / (N - 1));
 }
 
-int main()
-{
+int main(){
 
     Model m;
-    if (!load_gpt2_model(m))
-    {
+    if (!load_gpt2_model(m)){
         fprintf(stderr, "Failed to load model\n");
         exit(1);
     }
@@ -127,14 +118,12 @@ int main()
     BPEEncoder encoder;
     BPEDecoder decoder;
 
-    if (!decoder.load("model/vocab.bin"))
-    {
+    if (!decoder.load("model/vocab.bin")){
         fprintf(stderr, "Failed to load vocabulary\n");
         exit(1);
     }
 
-    if (!encoder.load(decoder.vocab))
-    {
+    if (!encoder.load(decoder.vocab)){
         fprintf(stderr, "Failed to initialize encoder\n");
         exit(1);
     }
