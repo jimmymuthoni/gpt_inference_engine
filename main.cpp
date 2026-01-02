@@ -82,8 +82,7 @@ float calculate_ppl(const char *prompt, int ntokens, Model &m, BPEEncoder &encod
         m.apply_transformer(ctx_tokens[j], j, kvbuf, ybuf);
         m.apply_lm_head(ybuf, logitbuf);
 
-        for (int i = 0; i < m.ntokens; i++)
-        {
+        for (int i = 0; i < m.ntokens; i++){
             logitbuf[i] /= temperature;
         }
 
@@ -145,4 +144,5 @@ int main(){
     float ppl = calculate_ppl(prompt.c_str(), ntokens, m, encoder, decoder, temperature);
     printf("\n\nthe perplexity score: %.2f", ppl);
     return 0;
+
 }
