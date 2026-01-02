@@ -1,9 +1,9 @@
-### gpt inference engine Architecture
+### Gpt inference engine Architecture
 
 A high performance C/C++ inference engine that runs on CPU.
 An inference engine is the runtime system responsible for executing a trained model to produce output. Inference engine runs the model efficiently.
 
-In simple terms is the os + copiler + scheduler for neural network execution.
+In simple terms is the os, copiler and scheduler for neural network execution.
 
 This engine solves latency, throughput, memory efficieny and hardware utilization (CPU) in this case (I got no GPU).
 
