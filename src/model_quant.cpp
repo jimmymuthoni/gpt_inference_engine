@@ -1,6 +1,8 @@
 #include <sys/mman.h>
 #include <assert.h>
-#include <arm_neon.h>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
 #include "model_quant.h"
 #include "ops.h"
