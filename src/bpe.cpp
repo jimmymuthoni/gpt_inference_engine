@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cstring>
+#include <algorithm>
 
 #include "bpe.h"
 
