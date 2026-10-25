@@ -1,4 +1,11 @@
+#include <cmath>
+#include <cstdlib>
+
+#if defined(__ARM_NEON)
 #include <arm_neon.h>
+#elif defined(__AVX2__) && defined(__FMA__)
+#include <immintrin.h>
+#endif
 
 #include "tensor.h"
 #include "ops.h"
@@ -20,6 +27,7 @@ float sdot(const int8_t *a, const int8_t *b, int n){
 }
 
 float sdot_simd(const float *a, const float *b, int n){
+#if defined(__ARM_NEON)
     const int simd_size = 4; // 128 bit / 32 bit = 4 floats
     int simd_end = (n / simd_size) * simd_size;
 
@@ -32,6 +40,29 @@ float sdot_simd(const float *a, const float *b, int n){
     }
 
     float sum = vaddvq_f32(sum_vec);
+#elif defined(__AVX2__) && defined(__FMA__)
+    const int simd_size = 8; // 256 bit / 32 bit = 8 floats
+    int simd_end = (n / simd_size) * simd_size;
+
+    __m256 sum_vec = _mm256_setzero_ps();
+
+    for (int i = 0; i < simd_end; i += simd_size){
+        __m256 va = _mm256_loadu_ps(a + i);
+        __m256 vb = _mm256_loadu_ps(b + i);
+        sum_vec = _mm256_fmadd_ps(va, vb, sum_vec);
+    }
+
+    // horizontal add of the 8 lanes
+    __m128 lo = _mm256_castps256_ps128(sum_vec);
+    __m128 hi = _mm256_extractf128_ps(sum_vec, 1);
+    lo = _mm_add_ps(lo, hi);
+    lo = _mm_hadd_ps(lo, lo);
+    lo = _mm_hadd_ps(lo, lo);
+    float sum = _mm_cvtss_f32(lo);
+#else
+    int simd_end = 0;
+    float sum = 0.0f;
+#endif
 
     // remaining elements
     for (int i = simd_end; i < n; ++i){
@@ -158,13 +189,12 @@ int temperature_sampling(const Tensor_Quant<1> &logits, float temperature){
 }
 
 float sdot_simd(const int8_t *a, const int8_t *b, int n){
+#if defined(__ARM_NEON)
     const int simd_size = 16; // 128 bit / 8 bit = 16 int8_t values
     int simd_end = (n / simd_size) * simd_size;
 
     int32x4_t sum_vec0 = vdupq_n_s32(0);
     int32x4_t sum_vec1 = vdupq_n_s32(0);
-    int32x4_t sum_vec2 = vdupq_n_s32(0);
-    int32x4_t sum_vec3 = vdupq_n_s32(0);
 
     for (int i = 0; i < simd_end; i += simd_size){
         int8x16_t va = vld1q_s8(a + i);
@@ -178,6 +208,10 @@ float sdot_simd(const int8_t *a, const int8_t *b, int n){
     }
 
     int32_t sum = vaddvq_s32(sum_vec0) + vaddvq_s32(sum_vec1);
+#else
+    int simd_end = 0;
+    int32_t sum = 0;
+#endif
 
     for (int i = simd_end; i < n; ++i){
         sum += a[i] * b[i];
