@@ -1,5 +1,7 @@
 #include <string>
 #include <chrono>
+#include <cmath>
+#include <algorithm>
 
 #include "bpe.h"
 #include "tensor.h"
