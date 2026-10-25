@@ -1,6 +1,9 @@
 #pragma once
 #include <iostream>
 #include <assert.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 
 template <int N>
 
@@ -19,9 +22,17 @@ class Tensor{
             alloc = nullptr;
         }
 
+        Tensor(float* _data, int i, int j){
+            assert(N == 2);
+            shape[0] = i;
+            shape[1] = j;
+            data = _data;
+            alloc = nullptr;
+        }
+
         void _alloc(size_t nfloats){
             alloc = new float[nfloats + 7];
-            data = (float *)(((uintprt_t)alloc + 31) & ~31);
+            data = (float *)(((uintptr_t)alloc + 31) & ~31);
         }
 
         Tensor(int i){
