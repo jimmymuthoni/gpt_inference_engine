@@ -1,6 +1,12 @@
 #include <sys/mman.h>
 #include <assert.h>
+#include <cmath>
+#include <vector>
+#include <algorithm>
+
+#if defined(__ARM_NEON)
 #include <arm_neon.h>
+#endif
 
 #include "model.h"
 #include "ops.h"
@@ -19,6 +25,7 @@ void LayerNorm::apply(Tensor<1> &out, const Tensor<1> &in){
     float sum_sq = 0.0f;
 
     int n = in.shape[0];
+#if defined(__ARM_NEON)
     const int simd_size = 4;
     int simd_end = (n / simd_size) * simd_size;
 
@@ -27,6 +34,9 @@ void LayerNorm::apply(Tensor<1> &out, const Tensor<1> &in){
         sum_ele += vaddvq_f32(val);
         sum_sq += vaddvq_f32(vmulq_f32(val, val));
     };
+#else
+    int simd_end = 0;
+#endif
 
     for (int i = simd_end; i < n; i++) {
         float v = data_ptr[i];
@@ -43,6 +53,7 @@ void LayerNorm::apply(Tensor<1> &out, const Tensor<1> &in){
     float *b = bias.data;
     float *o = out.data;
 
+#if defined(__ARM_NEON)
     float32x4_t mean_vec = vdupq_n_f32(mean);
     float32x4_t invstd_vec = vdupq_n_f32(invstddev);
 
@@ -57,6 +68,12 @@ void LayerNorm::apply(Tensor<1> &out, const Tensor<1> &in){
         normalized = vaddq_f32(normalized, bias_vec);
 
         vst1q_f32(o + j, normalized);
+    }
+#endif
+
+    // remaining elements (all of them when there is no SIMD path)
+    for (int j = simd_end; j < n; j++){
+        o[j] = (data_ptr[j] - mean) * invstddev * w[j] + b[j];
     }
 }
 
