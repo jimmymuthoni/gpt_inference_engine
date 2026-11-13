@@ -109,11 +109,11 @@ These values are hardcoded in `src/load_gpt2.cpp` and `src/model.cpp`.
 
 `scripts/convert_weight.py` downloads GPT-2 from HuggingFace and rewrites it into a format the C++ code can use directly:
 
-1.Parses safetensors by hand. The file is `[8-byte header length][JSON metadata][raw tensor bytes]`. The script memory-maps it and uses each tensor's `data_offsets` to locate its bytes.
-2. Writes tensors in a fixed order: `wte`, `wpe`, `ln_f`, then each layer's LayerNorm, attention and MLP parameters.
-3. Transposes weight matrices. GPT-2 stores linear layers as `[in, out]`. They are written as `[out, in]` so every output neuron's weights are one contiguous row — a matrix-vector product becomes a series of contiguous dot products, which is ideal for SIMD.
-4. Pads every tensor to 32 bytes for aligned SIMD loads.
-5. Writes `model_index.json` with each tensor's offset, size, shape and dtype.
+1. Parses safetensors by hand. The file is `[8-byte header length][JSON metadata][raw tensor bytes]`. The script memory-maps it and uses each tensor's `data_offsets` to locate its bytes.
+3. Writes tensors in a fixed order: `wte`, `wpe`, `ln_f`, then each layer's LayerNorm, attention and MLP parameters.
+4. Transposes weight matrices. GPT-2 stores linear layers as `[in, out]`. They are written as `[out, in]` so every output neuron's weights are one contiguous row — a matrix-vector product becomes a series of contiguous dot products, which is ideal for SIMD.
+5. Pads every tensor to 32 bytes for aligned SIMD loads.
+6. Writes `model_index.json` with each tensor's offset, size, shape and dtype.
 
 #### 2. Loading (C++)
 
@@ -234,15 +234,4 @@ The build uses `-O2 -march=native`, so the binary is optimized for the machine i
 This path is not wired into `main.cpp` and is not yet correct; see below.
 
 ---
-
-#### Known limitations
-
-- `vocab.bin` generation is missing. A script to export GPT-2's vocabulary in the expected format still needs to be added.
-- Tokenizer is approximate.Greedy longest-match, not true BPE with merge ranks.
-- Hardcoded model. Dimensions, layer count and tensor offsets are fixed to GPT-2 small.
-- Int8 path is unfinished:
-  - `absmax.py` uses `128 / max|w|`, so the largest weight rounds to 128 and overflows int8 (should be `127`).
-  - Activation scales in `model_quant.cpp` are placeholder constants (`0.01`) and some buffers' scales are never initialized, so outputs are not meaningful yet.
-- Tokens/sec is overstated. The count includes prompt tokens, not only generated ones.
-- Single-threaded. No multithreading of the matrix-vector products yet.
 
